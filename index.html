@@ -1,8 +1,99 @@
-<html>
-
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rep Calculator</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Roboto, "Segoe UI", Arial; max-width:600px;margin:40px auto;padding:16px; }
+    label { display:block;margin:12px 0 4px;font-weight:600; }
+    input[type="number"] { width:120px;padding:6px;margin-right:8px; }
+    button { padding:8px 12px;margin-top:8px; }
+    .results { margin-top:16px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fafafa; }
+    .small { color:#666;font-size:0.9em; }
+  </style>
+</head>
 <body>
-    <h1>Welcome to RepNerd</h1>
-</body>
+  <h1>Rep Calculator</h1>
 
+  <label for="weight">Weight lifted (kg or lb)</label>
+  <input id="weight" type="number" step="any" min="0" value="100" />
+
+  <label for="reps">Repetitions</label>
+  <input id="reps" type="number" min="1" max="20" value="5" />
+
+  <div style="margin-top:8px;">
+    <button id="calc">Calculate 1RM</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="results" id="out" aria-live="polite">
+    <div class="small">One-rep max (Epley): <strong id="oneRm">—</strong></div>
+    <div class="small">Estimated 3RM: <strong id="threeRm">—</strong></div>
+    <div class="small">Estimated 5RM: <strong id="fiveRm">—</strong></div>
+    <div class="small">Estimated 10RM: <strong id="tenRm">—</strong></div>
+  </div>
+
+  <script>
+    // Epley formula: 1RM = weight * (1 + reps/30)
+    function epley(weight, reps) {
+      if (reps <= 1) return weight;
+      return weight * (1 + reps / 30);
+    }
+
+    // Inverse approximate to estimate weight for target reps from 1RM:
+    // weight = 1RM / (1 + reps/30)
+    function weightForReps(oneRm, reps) {
+      if (reps <= 1) return oneRm;
+      return oneRm / (1 + reps / 30);
+    }
+
+    const weightEl = document.getElementById('weight');
+    const repsEl = document.getElementById('reps');
+    const oneRmEl = document.getElementById('oneRm');
+    const threeRmEl = document.getElementById('threeRm');
+    const fiveRmEl = document.getElementById('fiveRm');
+    const tenRmEl = document.getElementById('tenRm');
+    const out = document.getElementById('out');
+
+    function format(n) {
+      return (Math.round(n * 10) / 10).toString();
+    }
+
+    function calculate() {
+      const w = parseFloat(weightEl.value) || 0;
+      const r = parseInt(repsEl.value) || 0;
+      if (w <= 0 || r <= 0) {
+        oneRmEl.textContent = '—';
+        threeRmEl.textContent = '—';
+        fiveRmEl.textContent = '—';
+        tenRmEl.textContent = '—';
+        return;
+      }
+      const oneRm = epley(w, r);
+      oneRmEl.textContent = format(oneRm);
+      threeRmEl.textContent = format(weightForReps(oneRm, 3));
+      fiveRmEl.textContent = format(weightForReps(oneRm, 5));
+      tenRmEl.textContent = format(weightForReps(oneRm, 10));
+    }
+
+    document.getElementById('calc').addEventListener('click', calculate);
+    document.getElementById('clear').addEventListener('click', () => {
+      weightEl.value = '';
+      repsEl.value = '';
+      oneRmEl.textContent = '—';
+      threeRmEl.textContent = '—';
+      fiveRmEl.textContent = '—';
+      tenRmEl.textContent = '—';
+    });
+
+    // live calculate on input change
+    weightEl.addEventListener('input', calculate);
+    repsEl.addEventListener('input', calculate);
+
+    // initial calc
+    calculate();
+  </script>
+</body>
 </html>
 
